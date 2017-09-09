@@ -24,13 +24,16 @@ must create it).
 If you wish to be quized on this word/definition, you must also add it
 to the master list.
 
-How to make this script executable (on mac or linux):
+How to make this script executable anywhere (on mac or linux):
 -----------------------------------------------------
 1. Make sure the first line of this script is #!/usr/bin/python
-2. Make script executable
-    chmod 775 vocab.py
-3. Make a link so that the terminal will find this script
-    sudo ln -s "$PWD"/vocab.py /usr/bin/vocab
+2. Make script executable::
+
+    $ chmod 775 vocab.py
+
+3. Make a link so that the terminal will find this script::
+
+    $ sudo ln -s "$PWD"/vocab.py /usr/bin/vocab
 
 Misc. Notes:
 ------------
