@@ -121,7 +121,6 @@ def list_words():
 
 def get_user_def(word, print_def=True):
     """Get user definition of `word`, or return False if not found."""
-    print(os.path.join(user_defs_dir, word))
     try:
         with open(os.path.join(user_defs_dir, word)) as ud:
             user_def = '\n'.join(list(ud))
