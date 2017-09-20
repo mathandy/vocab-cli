@@ -68,6 +68,7 @@ from urllib2 import urlopen
 from shutil import copyfile
 from random import sample
 
+EDITOR = 'subl'  # command to open text editor
 
 root_dir = os.path.dirname(os.path.realpath(__file__))
 user_defs_dir = os.path.join(root_dir, 'user-defs')
@@ -177,6 +178,11 @@ def quiz(n):
         define(word)
 
 
+def add_user_def(word):
+    from subprocess import call
+    call([EDITOR, os.path.join(user_defs_dir, word)])
+
+
 if __name__ == '__main__':
     try:
         if sys.argv[1] in ['add', 'a']:
@@ -187,6 +193,8 @@ if __name__ == '__main__':
             list_words()
         elif sys.argv[1] in ['define', 'd']:
             define(sys.argv[2])
+        elif sys.argv[1] in ['add_user_def', 'u']:
+            add_user_def(sys.argv[2])        
         elif sys.argv[1] in ['quiz', 'q']:
             try:
                 num_questions = int(sys.argv[2])
@@ -196,8 +204,10 @@ if __name__ == '__main__':
         elif sys.argv[1] in ['help', 'h']:
             print(__doc__)
         else:
+            # if definition is available, add and define
             if len(sys.argv) == 2 and define(sys.argv[1]):
-                add_word(sys.argv[1])
+                if sys.argv[1] not in get_word_list():
+                    add_word(sys.argv[1])
             else:
                 print("\nFor help, use `vocab help`.\n")
 
