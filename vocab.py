@@ -31,9 +31,10 @@ How to make this script executable anywhere (on mac or linux):
 
     $ chmod 775 vocab.py
 
-3. Make a link so that the terminal will find this script::
-
-    $ sudo ln -s "$PWD"/vocab.py /usr/bin/vocab
+3. Make a link so that the terminal will find this script:
+    
+    $ sudo mkdir /usr/local/bin  # likely already exists
+    $ sudo ln -s "$PWD"/vocab.py /usr/local/bin/vocab
 
 Misc. Notes:
 ------------
@@ -68,7 +69,35 @@ from urllib2 import urlopen
 from shutil import copyfile
 from random import sample
 
+
 EDITOR = 'subl'  # command to open text editor
+USE_PYDICTIONARY = False
+
+
+def single_spaced(s, tab=' '):
+    """Removes redundant whitespace."""
+    new_s = s.replace('\t', tab)
+    return ''.join([c for i, c in enumerate(new_s[:-1]) 
+                        if not (c == ' ' and new_s[i+1] == ' ')]) + new_s[-1]
+
+
+# Check that PyDictionary is available
+use_pydictionary = False
+if USE_PYDICTIONARY:
+    try:
+        from PyDictionary import PyDictionary as pyd
+        use_pydictionary = True
+    except ImportError:
+        from warnings import warn
+        warn("For better results, please install PyDictionary.  On most "
+             "systems, this can be done using the terminal/command-prompt "
+             "by entering the command:\n\tpip install PyDictionary\n")
+
+
+root_dir = os.path.dirname(os.path.realpath(__file__))
+user_defs_dir = os.path.join(root_dir, 'user-defs')
+word_list_location = os.path.join(root_dir, 'word-list.txt')
+
 
 root_dir = os.path.dirname(os.path.realpath(__file__))
 user_defs_dir = os.path.join(root_dir, 'user-defs')
@@ -124,24 +153,30 @@ def get_user_def(word, print_def=True):
     """Get user definition of `word`, or return False if not found."""
     try:
         with open(os.path.join(user_defs_dir, word)) as ud:
-            user_def = '\n'.join(list(ud))
+            user_def = ''.join(list(ud))
             if print_def:
-                print(user_def)
+                print('\n' + user_def)
             return user_def
     except IOError:
         return False
 
 
-def define(word, print_def=True):
-    """Get definition of `word`.
+def get_pydict_def(word, print_def=True):
+    """Returns string definition using PyDictionary."""
+    pydict_def = ''
+    for part_of_speech, def_list in pyd().meaning(word).items():
+        pydict_def += part_of_speech
+        for i, d in enumerate(def_list): 
+            pydict_def += '\n\t' + str(i+1) + '. ' + d
+        pydict_def += '\n'
+    if pydict_def:
+        if print_def:
+            print('\n' + pydict_def)
+        return pydict_def
 
-    If not defined by user, scrapes the definition of `word` from 
-    dictionary.com.  If not available there, returns False."""
 
-    user_def = get_user_def(word, print_def=print_def)
-    if user_def:
-        return user_def
-
+def scrape_web_def(word, print_def=True):
+    """Scrapes definitions from Dictionary.com."""
     word = word.replace(' ', '--')
     url_to_scrape = "http://dictionary.reference.com/browse/" + word
     try:
@@ -158,9 +193,30 @@ def define(word, print_def=True):
     for i, d in enumerate(defs):
         web_def += '\n' + str(i+1) + '. ' + d
 
+    web_def = single_spaced(web_def)
+
     if print_def:
-        print(web_def)
+        print('\n' + web_def)
     return web_def
+
+
+def define(word, print_def=True):
+    """Get definition of `word`.
+
+    If not defined by user, scrapes the definition of `word` from 
+    dictionary.com and/or PyDictionary.  If definition not available, 
+    returns False."""
+
+    user_def = get_user_def(word, print_def=print_def)
+    if user_def:
+        return user_def
+
+    if use_pydictionary:
+        pydict_def = get_pydict_def(word, print_def=print_def)
+        if pydict_def:
+            return pydict_def
+
+    return scrape_web_def(word, print_def=print_def)
 
 
 def quiz(n):
