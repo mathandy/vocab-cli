@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 """A CLI to define, create a list of, and quiz you on vocabulary words.
 
 Usage:
@@ -65,21 +65,34 @@ try: input = raw_input
 except: pass
 
 import re, sys, os
-from urllib2 import urlopen
+try:
+    from urllib2 import urlopen # python 2
+except:
+    from urllib.request import urlopen # python 3
 from shutil import copyfile
 from random import sample
 
 
 EDITOR = 'subl'  # command to open text editor
-USE_PYDICTIONARY = False
+USE_PYDICTIONARY = True
+
+
+# adhoc fix to prevent warnings cause by PyDictionary
+if USE_PYDICTIONARY:
+    import warnings
+    warnings.filterwarnings("ignore")
 
 
 def single_spaced(s, tab=' '):
     """Removes redundant whitespace."""
+    # if not len(s):
+    #     return s
     new_s = s.replace('\t', tab)
     return ''.join([c for i, c in enumerate(new_s[:-1]) 
                         if not (c == ' ' and new_s[i+1] == ' ')]) + new_s[-1]
-
+def single_spaced2(s, space=' ', tab=' '):
+    """Remove redundant whitespace (note: not well tested)"""
+    return space.join(filter(None, s.replace('\t', tab).split(space)))
 
 # Check that PyDictionary is available
 use_pydictionary = False
@@ -178,7 +191,7 @@ def get_pydict_def(word, print_def=True):
 def scrape_web_def(word, print_def=True):
     """Scrapes definitions from Dictionary.com."""
     word = word.replace(' ', '--')
-    url_to_scrape = "http://dictionary.reference.com/browse/" + word
+    url_to_scrape = "https://dictionary.reference.com/browse/" + word
     try:
         html = urlopen(url_to_scrape).read()
     except:
@@ -240,7 +253,7 @@ def add_user_def(word):
 
 
 if __name__ == '__main__':
-    try:
+    # try:
         if sys.argv[1] in ['add', 'a']:
             add_word(' '.join(sys.argv[2:]))
         elif sys.argv[1] in ['remove', 'rm']:
@@ -267,9 +280,10 @@ if __name__ == '__main__':
             else:
                 print("\nFor help, use `vocab help`.\n")
 
-    except Exception as e:
-        print("Whoops... something went wrong in an unexpected way:")
-        print(e)
-        print("\nFor help, use `vocab help`.\n")
-    finally:
-        sys.exit(0)
+    # except Exception as e:
+    #     print("Whoops... something went wrong in an unexpected way:")
+    #     print(e)
+    #     print("\nFor help, use `vocab help`.\n")
+    #     raise
+    # finally:
+    #     sys.exit(0)
