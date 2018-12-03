@@ -100,7 +100,7 @@ if USE_PYDICTIONARY:
     try:
         from PyDictionary import PyDictionary as pyd
         use_pydictionary = True
-    except ImportError:
+    except:
         from warnings import warn
         warn("For better results, please install PyDictionary.  On most "
              "systems, this can be done using the terminal/command-prompt "
