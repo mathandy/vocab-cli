@@ -1,0 +1,4 @@
+.*
+word-list*
+user-defs
+!.gitignore
