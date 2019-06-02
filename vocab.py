@@ -15,12 +15,12 @@ Replace <word> with a word (or phrase) in the following examples::
 
 How to add words manually:
 --------------------------
-Definitions not available on dictionary.com (or that you wish to 
-personalize) can be added manually by creating and adding a file to the 
-`user-defs` subdirectory.  Simply paste the definition into a file 
-named after the exact word/phrase (with no extension).  The `user-defs` 
-subdirectory must be located in the same directory as `vocab.py` (you 
-must create it).  
+Definitions not available on dictionary.com (or that you wish to
+personalize) can be added manually by creating and adding a file to the
+`user-defs` subdirectory.  Simply paste the definition into a file
+named after the exact word/phrase (with no extension).  The `user-defs`
+subdirectory must be located in the same directory as `vocab.py` (you
+must create it).
 If you wish to be quized on this word/definition, you must also add it
 to the master list.
 
@@ -32,21 +32,21 @@ How to make this script executable anywhere (on mac or linux):
     $ chmod 775 vocab.py
 
 3. Make a link so that the terminal will find this script:
-    
+
     $ sudo mkdir /usr/local/bin  # likely already exists
     $ sudo ln -s "$PWD"/vocab.py /usr/local/bin/vocab
 
 Misc. Notes:
 ------------
-* This code assumes words are always case-sensitive and may include 
+* This code assumes words are always case-sensitive and may include
     symbols and/or whitespace.
 * When searching Dictionary.com for a definitions, spaces are replaced
     by double hyphens.
-* Removing a definition from the vocabulary list (with the rm/remove 
-    command), does not remove any definition present in the `user-defs` 
+* Removing a definition from the vocabulary list (with the rm/remove
+    command), does not remove any definition present in the `user-defs`
     subdirectory.
-* The master vocabulary list should be a single column of words. 
-    CSV style is fine too (each cell being a word), but this will be 
+* The master vocabulary list should be a single column of words.
+    CSV style is fine too (each cell being a word), but this will be
     converted to a column.
 
 Credit:
@@ -56,12 +56,12 @@ Definitions are scraped from Dictionary.com.
 
 Licence:
 --------
-This software is available under the MIT License.  
+This software is available under the MIT License.
 Copyright (c) 2017 Andrew Allan Port.
 
 """
 from __future__ import print_function
-try: input = raw_input 
+try: input = raw_input
 except: pass
 
 import re, sys, os
@@ -88,7 +88,7 @@ def single_spaced(s, tab=' '):
     # if not len(s):
     #     return s
     new_s = s.replace('\t', tab)
-    return ''.join([c for i, c in enumerate(new_s[:-1]) 
+    return ''.join([c for i, c in enumerate(new_s[:-1])
                         if not (c == ' ' and new_s[i+1] == ' ')]) + new_s[-1]
 def single_spaced2(s, space=' ', tab=' '):
     """Remove redundant whitespace (note: not well tested)"""
@@ -179,7 +179,7 @@ def get_pydict_def(word, print_def=True):
     pydict_def = ''
     for part_of_speech, def_list in pyd().meaning(word).items():
         pydict_def += part_of_speech
-        for i, d in enumerate(def_list): 
+        for i, d in enumerate(def_list):
             pydict_def += '\n\t' + str(i+1) + '. ' + d
         pydict_def += '\n'
     if pydict_def:
@@ -216,8 +216,8 @@ def scrape_web_def(word, print_def=True):
 def define(word, print_def=True):
     """Get definition of `word`.
 
-    If not defined by user, scrapes the definition of `word` from 
-    dictionary.com and/or PyDictionary.  If definition not available, 
+    If not defined by user, scrapes the definition of `word` from
+    dictionary.com and/or PyDictionary.  If definition not available,
     returns False."""
 
     user_def = get_user_def(word, print_def=print_def)
@@ -263,7 +263,7 @@ if __name__ == '__main__':
         elif sys.argv[1] in ['define', 'd']:
             define(sys.argv[2])
         elif sys.argv[1] in ['add_user_def', 'u']:
-            add_user_def(sys.argv[2])        
+            add_user_def(sys.argv[2])
         elif sys.argv[1] in ['quiz', 'q']:
             try:
                 num_questions = int(sys.argv[2])
