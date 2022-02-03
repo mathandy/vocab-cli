@@ -61,60 +61,53 @@ Copyright (c) 2017 Andrew Allan Port.
 
 """
 from __future__ import print_function
-try: input = raw_input
-except: pass
-
 import re, sys, os
-try:
-    from urllib2 import urlopen # python 2
-except:
-    from urllib.request import urlopen # python 3
 from shutil import copyfile
 from random import sample
 
+try:
+    from PyDictionary import PyDictionary as pyd
+    use_pydictionary = True
 
-EDITOR = 'subl'  # command to open text editor
-USE_PYDICTIONARY = True
-
-
-# adhoc fix to prevent warnings cause by PyDictionary
-if USE_PYDICTIONARY:
+    # adhoc fix to prevent warnings cause by PyDictionary
     import warnings
     warnings.filterwarnings("ignore")
+except ImportError:
+    from warnings import warn
+    warn("For better results, please install PyDictionary.  On most "
+         "systems, this can be done using the terminal/command-prompt "
+         "by entering the command:\n\tpip install PyDictionary\n")
+    use_pydictionary = False
 
 
-def single_spaced(s, tab=' '):
+if sys.version_info < (3, 0):  # if using Python 2
+    input = raw_input
+    from urllib2 import urlopen
+else:
+    from urllib.request import urlopen
+
+
+root_dir = os.path.dirname(os.path.realpath(__file__))
+user_defs_dir = os.path.join(root_dir, 'user-defs')
+word_list_location = os.path.join(root_dir, 'word-list.txt')
+
+
+def open_file(filepath):
+    import subprocess, os, platform
+    if platform.system() == 'Darwin':       # macOS
+        subprocess.call(('open', filepath))
+    elif platform.system() == 'Windows':    # Windows
+        os.startfile(filepath)
+    else:                                   # linux variants
+        subprocess.call(('xdg-open', filepath))
+
+
+def single_spaced(s, convert_tabs_to_spaces=True):
     """Removes redundant whitespace."""
-    # if not len(s):
-    #     return s
-    new_s = s.replace('\t', tab)
-    return ''.join([c for i, c in enumerate(new_s[:-1])
-                        if not (c == ' ' and new_s[i+1] == ' ')]) + new_s[-1]
-def single_spaced2(s, space=' ', tab=' '):
-    """Remove redundant whitespace (note: not well tested)"""
-    return space.join(filter(None, s.replace('\t', tab).split(space)))
-
-# Check that PyDictionary is available
-use_pydictionary = False
-if USE_PYDICTIONARY:
-    try:
-        from PyDictionary import PyDictionary as pyd
-        use_pydictionary = True
-    except:
-        from warnings import warn
-        warn("For better results, please install PyDictionary.  On most "
-             "systems, this can be done using the terminal/command-prompt "
-             "by entering the command:\n\tpip install PyDictionary\n")
-
-
-root_dir = os.path.dirname(os.path.realpath(__file__))
-user_defs_dir = os.path.join(root_dir, 'user-defs')
-word_list_location = os.path.join(root_dir, 'word-list.txt')
-
-
-root_dir = os.path.dirname(os.path.realpath(__file__))
-user_defs_dir = os.path.join(root_dir, 'user-defs')
-word_list_location = os.path.join(root_dir, 'word-list.txt')
+    new_s = s.replace('\t', ' ') if convert_tabs_to_spaces else s
+    new_s = [c for i, c in enumerate(new_s[:-1])
+             if not c == new_s[i+1] == ' ']
+    return new_s + new_s[-1]
 
 
 def get_word_list():
@@ -148,6 +141,7 @@ def remove_word(word, backup=True):
         print("Unexpected error attempting to backup list, "
               "exiting without overwriting master list.\n\n")
         print("="*50)
+        import traceback
         traceback.print_exc()
         sys.exit(1)
 
@@ -162,19 +156,17 @@ def list_words():
     print()
 
 
-def get_user_def(word, print_def=True):
+def get_user_def(word):
     """Get user definition of `word`, or return False if not found."""
     try:
         with open(os.path.join(user_defs_dir, word)) as ud:
             user_def = ''.join(list(ud))
-            if print_def:
-                print('\n' + user_def)
             return user_def
     except IOError:
         return False
 
 
-def get_pydict_def(word, print_def=True):
+def get_pydict_def(word):
     """Returns string definition using PyDictionary."""
     pydict_def = ''
     for part_of_speech, def_list in pyd().meaning(word).items():
@@ -183,12 +175,10 @@ def get_pydict_def(word, print_def=True):
             pydict_def += '\n\t' + str(i+1) + '. ' + d
         pydict_def += '\n'
     if pydict_def:
-        if print_def:
-            print('\n' + pydict_def)
         return pydict_def
 
 
-def scrape_web_def(word, print_def=True):
+def scrape_web_def(word):
     """Scrapes definitions from Dictionary.com."""
     word = word.replace(' ', '--')
     url_to_scrape = "https://dictionary.reference.com/browse/" + word
@@ -207,9 +197,6 @@ def scrape_web_def(word, print_def=True):
         web_def += '\n' + str(i+1) + '. ' + d
 
     web_def = single_spaced(web_def)
-
-    if print_def:
-        print('\n' + web_def)
     return web_def
 
 
@@ -220,25 +207,25 @@ def define(word, print_def=True):
     dictionary.com and/or PyDictionary.  If definition not available,
     returns False."""
 
-    user_def = get_user_def(word, print_def=print_def)
-    if user_def:
-        return user_def
+    definition = get_user_def(word)
+    if definition:
+        return definition
 
     if use_pydictionary:
-        pydict_def = get_pydict_def(word, print_def=print_def)
-        if pydict_def:
-            return pydict_def
+        definition = get_pydict_def(word)
+        if definition:
+            return definition
 
-    return scrape_web_def(word, print_def=print_def)
+    definition = scrape_web_def(word)
+    if print_def:
+        print('\n' + definition)
+    return definition
 
 
 def quiz(n):
     """Quiz user on `n` random words from the master word list."""
     master_list = get_word_list()
-
-    if n is None:
-        n = len(master_list)
-
+    n = int(n) if n else len(master_list)
     for i, word in enumerate(sample(master_list, n)):
         input('\n' + '='*50 + '\n[Q. {}/{}] Define: "{}"  \n'
               '(Press enter when ready for definition.)'
@@ -248,42 +235,51 @@ def quiz(n):
 
 
 def add_user_def(word):
-    from subprocess import call
-    call([EDITOR, os.path.join(user_defs_dir, word)])
+    from pathlib import Path
+    fp = os.path.join(user_defs_dir, word)
+    Path(fp).touch()
+    open_file(fp)
+
+
+def add_and_define(word):
+    # if definition is available, add and define
+    definition = define(word, print_def=True)
+    if definition and word not in get_word_list():
+        add_word(word)
+
+
+commands = {
+    'add': add_word,
+    'remove': remove_word,
+    'list': list_words,
+    'define': define,
+    'add_user_def': add_user_def,
+    'quiz': quiz,
+    'help': help,
+}
+
+shortcuts = {
+    'a': commands['add'],
+    'rm': commands['remove'],
+    'ls': commands['list'],
+    'd': commands['define'],
+    'u': commands['add_user_def'],
+    'q': commands['quiz'],
+    'h': commands['help'],
+}
+
+commands.update(shortcuts)
 
 
 if __name__ == '__main__':
-    # try:
-        if sys.argv[1] in ['add', 'a']:
-            add_word(' '.join(sys.argv[2:]))
-        elif sys.argv[1] in ['remove', 'rm']:
-            remove_word(' '.join(sys.argv[2:]))
-        elif sys.argv[1] in ['list', 'ls']:
-            list_words()
-        elif sys.argv[1] in ['define', 'd']:
-            define(sys.argv[2])
-        elif sys.argv[1] in ['add_user_def', 'u']:
-            add_user_def(sys.argv[2])
-        elif sys.argv[1] in ['quiz', 'q']:
-            try:
-                num_questions = int(sys.argv[2])
-            except:
-                num_questions = None
-            quiz(num_questions)
-        elif sys.argv[1] in ['help', 'h']:
-            print(__doc__)
-        else:
-            # if definition is available, add and define
-            if len(sys.argv) == 2 and define(sys.argv[1]):
-                if sys.argv[1] not in get_word_list():
-                    add_word(sys.argv[1])
-            else:
-                print("\nFor help, use `vocab help`.\n")
+    import argparse
 
-    # except Exception as e:
-    #     print("Whoops... something went wrong in an unexpected way:")
-    #     print(e)
-    #     print("\nFor help, use `vocab help`.\n")
-    #     raise
-    # finally:
-    #     sys.exit(0)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('command')
+    parser.add_argument('option', nargs='?', default=None)
+    args = parser.parse_args()
+
+    if args.command not in commands.keys():
+        args.option = args.command
+        args.command = 'define'
+    commands[args.command](args.option)
