@@ -189,8 +189,8 @@ def scrape_web_def(word):
               'does not know what "{}" means and no user-definition '
               'was found in {} .\n'.format(word, user_defs_dir))
         return False
-    items=re.findall('<div class="def-content">\s.*?</div>', html, re.S)
-    defs = [re.sub('<.*?>','', x).strip() for x in items]
+    items = re.findall('<div class="def-content">\s.*?</div>', html, re.S)
+    defs = [re.sub('<.*?>', '', x).strip() for x in items]
 
     web_def = ''
     for i, d in enumerate(defs):
