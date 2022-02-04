@@ -134,16 +134,17 @@ def remove_word(word, backup=True):
         sys.exit(1)
 
     # create backup (after checking word list opens)
-    try:
-        copyfile(word_list_location, word_list_location + '.bu')
-    except:
-        print("="*50)
-        print("Unexpected error attempting to backup list, "
-              "exiting without overwriting master list.\n\n")
-        print("="*50)
-        import traceback
-        traceback.print_exc()
-        sys.exit(1)
+    if backup:
+        try:
+            copyfile(word_list_location, word_list_location + '.bu')
+        except:
+            print("="*50)
+            print("Unexpected error attempting to backup list, "
+                  "exiting without overwriting master list.\n\n")
+            print("="*50)
+            import traceback
+            traceback.print_exc()
+            sys.exit(1)
 
     with open(word_list_location, 'w') as wl:
         wl.write('\n'.join(word_list))
