@@ -242,7 +242,7 @@ def add_user_def(word):
 
 
 def add_and_define(word):
-    # if definition is available, add and define
+    """if definition is available, add and define"""
     definition = define(word, print_def=True)
     if definition and word not in get_word_list():
         add_word(word)
