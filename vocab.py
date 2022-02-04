@@ -209,17 +209,16 @@ def define(word, print_def=True):
     returns False."""
 
     definition = get_user_def(word)
-    if definition:
-        return definition
 
-    if use_pydictionary:
+    if not definition and use_pydictionary:
         definition = get_pydict_def(word)
-        if definition:
-            return definition
 
-    definition = scrape_web_def(word)
+    if not definition:
+        definition = scrape_web_def(word)
+
     if print_def:
         print('\n' + definition)
+
     return definition
 
 
@@ -280,7 +279,8 @@ if __name__ == '__main__':
     parser.add_argument('option', nargs='?', default=None)
     args = parser.parse_args()
 
-    if args.command not in commands.keys():
+    if args.command not in commands:
         args.option = args.command
         args.command = 'define'
+
     commands[args.command](args.option)
