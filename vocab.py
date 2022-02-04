@@ -149,7 +149,7 @@ def remove_word(word, backup=True):
         wl.write('\n'.join(word_list))
 
 
-def list_words():
+def list_words(*vargs, **kwargs):
     print("\nMaster list location:\n" + word_list_location, '\n')
     for word in get_word_list():
         print(word)
